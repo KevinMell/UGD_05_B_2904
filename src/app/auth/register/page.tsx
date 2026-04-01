@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
@@ -7,127 +7,94 @@ import AuthFromWrapper from '../../../components/AuthFormWrapper';
 import SocialAuth from '../../../components/SocialAuth';
 import { toast } from 'react-toastify';
 
-type RegisterFormData = {
-    username: string;
-    email: string;
-    nomortelp: string;
-    password: string;
-    confirmPassword: string;
-    captcha: string;
-};
-
-const DEFAULT_CAPTCHA = 'AbCdEf';
-
-const RegisterPage = () => {
+export default function RegisterPage() {
     const router = useRouter();
-    const { register, handleSubmit, watch, formState: { errors } } = useForm<RegisterFormData>();
+    const { register, handleSubmit, watch, formState: { errors } } = useForm();
+    const [captchaCode, setCaptchaCode] = useState('');
     const [captchaInput, setCaptchaInput] = useState('');
+    const passwordValue = watch('password', '');
 
-    const onSubmit = (data: RegisterFormData) => {
+    const generateCaptcha = () => {
+        setCaptchaCode(Math.random().toString(36).substring(2, 8).toUpperCase());
+    };
+
+    useEffect(() => generateCaptcha(), []);
+
+    const getPasswordStrength = (pass: string) => {
+        let score = 0;
+        if (!pass) return { score: 0, text: '', color: 'bg-gray-200', width: '0%' };
+        if (pass.length > 5) score += 1;
+        if (/[A-Z]/.test(pass)) score += 1;
+        if (/[0-9]/.test(pass)) score += 1;
+        if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+
+        if (score <= 1) return { score, text: 'Lemah', color: 'bg-red-500', width: '25%' };
+        if (score === 2) return { score, text: 'Sedang', color: 'bg-yellow-500', width: '50%' };
+        if (score === 3) return { score, text: 'Kuat', color: 'bg-blue-500', width: '75%' };
+        return { score, text: 'Sangat Kuat', color: 'bg-green-500', width: '100%' };
+    };
+
+    const strength = getPasswordStrength(passwordValue);
+
+    const onSubmit = (data: any) => {
         if (data.password !== data.confirmPassword) {
             toast.error('Konfirmasi password tidak cocok!', { theme: 'dark' });
             return;
         }
-        if (captchaInput !== DEFAULT_CAPTCHA) {
+        if (captchaInput !== captchaCode) {
             toast.error('Captcha salah!', { theme: 'dark' });
+            generateCaptcha();
+            setCaptchaInput('');
             return;
         }
-
-        toast.success('Register Berhasil!', { theme: 'dark', position: 'top-right' });
+        toast.success('Register Berhasil!', { theme: 'dark' });
         router.push("/auth/login");
     };
 
     return (
         <AuthFromWrapper title="Register">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">
-                <div className="space-y-2">
-                    <label htmlFor="username" className="text-sm font-medium text-gray-700">
-                        Username <span className="text-gray-500 text-xs">(max 8 karakter)</span>
-                    </label>
-                    <input
-                        {...register('username', { required: 'Username wajib diisi' })}
-                        className={`w-full px-4 py-2.5 rounded-lg border ${errors.username ? 'border-red-500' : 'border-gray-300'}`}
-                        placeholder="Masukkan username"
-                    />
-                    {errors.username && <p className="text-red-600 text-sm italic mt-1">{errors.username.message}</p>}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 w-full">
+                <div>
+                    <label className="text-sm font-medium">Username</label>
+                    <input {...register('username', { required: 'Wajib diisi', maxLength: { value: 8, message: 'Maks 8 karakter' } })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukan username" />
+                    {errors.username && <p className="text-red-600 text-xs mt-1">{errors.username.message as string}</p>}
                 </div>
-
-                <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
-                    <input
-                        id="email"
-                        type="email"
-                        {...register('email', { required: 'Email wajib diisi' })}
-                        className={`w-full px-4 py-2.5 rounded-lg border ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
-                        placeholder="Masukkan email"
-                    />
-                    {errors.email && <p className="text-red-600 text-sm italic mt-1">{errors.email.message}</p>}
+                <div>
+                    <label className="text-sm font-medium">Email</label>
+                    <input type="email" {...register('email', { required: 'Wajib diisi' })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukan email" />
                 </div>
-
-                <div className="space-y-2">
-                    <label htmlFor="nomortelp" className="text-sm font-medium text-gray-700">Nomor Telepon</label>
-                    <input
-                        type="tel"
-                        {...register('nomortelp', { required: 'Nomor telepon wajib diisi' })}
-                        onInput={(e) => {
-                            e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '');
-                        }}
-                        className={`w-full px-4 py-2.5 rounded-lg border ${errors.nomortelp ? 'border-red-500' : 'border-gray-300'}`}
-                        placeholder="Masukkan nomor telepon"
-                    />
-                    {errors.nomortelp && <p className="text-red-600 text-sm italic mt-1">{errors.nomortelp.message}</p>}
+                <div>
+                    <label className="text-sm font-medium">Nomor Telepon</label>
+                    <input type="tel" {...register('nomortelp', { required: 'Wajib diisi' })} onInput={(e) => e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '')} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukan nomor" />
                 </div>
-
-                <div className="space-y-2">
-                    <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
-                    <input
-                        id="password"
-                        type="password"
-                        {...register('password', { required: 'Password wajib diisi' })}
-                        className={`w-full px-4 py-2.5 rounded-lg border ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
-                        placeholder="Masukkan password"
-                    />
-                    {errors.password && <p className="text-red-600 text-sm italic mt-1">{errors.password.message}</p>}
+                <div>
+                    <label className="text-sm font-medium">Password</label>
+                    <input type="password" {...register('password', { required: 'Wajib diisi' })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukan password" />
+                    
+                    {passwordValue && (
+                        <div className="mt-2">
+                            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                                <div className={`h-full ${strength.color} transition-all duration-300`} style={{ width: strength.width }}></div>
+                            </div>
+                            <p className={`text-xs mt-1 font-bold text-${strength.color.replace('bg-', '')}`}>{strength.text}</p>
+                        </div>
+                    )}
                 </div>
-
-                <div className="space-y-2">
-                    <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">Konfirmasi Password</label>
-                    <input
-                        id="confirmPassword"
-                        type="password"
-                        {...register('confirmPassword', { required: 'Konfirmasi password wajib diisi' })}
-                        className={`w-full px-4 py-2.5 rounded-lg border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`}
-                        placeholder="Masukkan ulang password"
-                    />
-                    {errors.confirmPassword && <p className="text-red-600 text-sm italic mt-1">{errors.confirmPassword.message}</p>}
+                <div>
+                    <label className="text-sm font-medium">Konfirmasi Password</label>
+                    <input type="password" {...register('confirmPassword', { required: 'Wajib diisi' })} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukan konfirmasi password" />
                 </div>
-
-                <div className="space-y-2">
-                    <div className="flex items-center space-x-3">
-                        <span className="text-sm font-medium text-gray-700">Captcha:</span>
-                        <span className="font-mono text-lg font-bold text-gray-800 bg-gray-100 px-3 py-1.5 rounded">{DEFAULT_CAPTCHA}</span>
+                <div>
+                    <div className="flex items-center space-x-3 mb-1">
+                        <span className="text-sm font-medium">Captcha:</span>
+                        <span className="font-mono text-lg font-bold bg-gray-100 px-3 py-1 rounded">{captchaCode}</span>
                     </div>
-                    <input
-                        type="text"
-                        value={captchaInput}
-                        onChange={(e) => setCaptchaInput(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300"
-                        placeholder="Masukkan captcha"
-                    />
+                    <input type="text" value={captchaInput} onChange={(e) => setCaptchaInput(e.target.value)} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukan captcha" required />
                 </div>
-
-                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg mt-4">
-                    Register
-                </button>
-
+                <button type="submit" className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg">Register</button>
                 <SocialAuth />
-
-                <p className="mt-6 text-center text-sm text-gray-600">
-                    Sudah punya akun? <Link href="/auth/login" className="text-blue-600 hover:text-blue-800 font-semibold">Login</Link>
-                </p>
+                <p className="mt-4 text-center text-sm">Sudah punya akun? <Link href="/auth/login" className="text-blue-600 font-bold hover:underline">Login</Link></p>
             </form>
         </AuthFromWrapper>
     );
-};
-
-export default RegisterPage;
+}
