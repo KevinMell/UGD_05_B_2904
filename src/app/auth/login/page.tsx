@@ -60,27 +60,39 @@ export default function LoginPage() {
                 )}
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Email</label>
-                    <input name="email" value={formData.email} onChange={handleChange} disabled={attempts <= 0} className="w-full px-4 py-2 border rounded-lg" />
+                    <input name="email" value={formData.email} onChange={handleChange} disabled={attempts <= 0} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukan email" />
                     {errors.email && <p className="text-red-600 text-sm italic">{errors.email}</p>}
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" name="password" value={formData.password} onChange={handleChange} disabled={attempts <= 0} className="w-full px-4 py-2 border rounded-lg" />
+                    <input type="password" name="password" value={formData.password} onChange={handleChange} disabled={attempts <= 0} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukan password" />
                     {errors.password && <p className="text-red-600 text-sm italic">{errors.password}</p>}
                 </div>
+                
+                {/* Ini bagian Ingat Saya & Forgot Password yang tadi hilang */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                        <input type="checkbox" id="remember" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" />
+                        <label htmlFor="remember" className="ml-2 text-sm text-gray-700">Ingat Saya</label>
+                    </div>
+                    <Link href="/auth/forgot-password" className="text-sm font-bold text-blue-600 hover:underline">
+                        Forgot Password?
+                    </Link>
+                </div>
+
                 <div className="space-y-2">
                     <div className="flex items-center space-x-3">
                         <span className="text-sm font-medium">Captcha:</span>
                         <span className="font-mono text-lg font-bold bg-gray-200 px-3 py-1 rounded tracking-widest">{captchaCode}</span>
                     </div>
-                    <input type="text" name="captchaInput" value={formData.captchaInput} onChange={handleChange} disabled={attempts <= 0} className="w-full px-4 py-2 border rounded-lg" placeholder="Masukkan captcha di atas" />
+                    <input type="text" name="captchaInput" value={formData.captchaInput} onChange={handleChange} disabled={attempts <= 0} className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Masukan captcha" />
                     {errors.captcha && <p className="text-red-600 text-sm italic">{errors.captcha}</p>}
                 </div>
                 <button type="submit" disabled={attempts <= 0} className={`w-full py-2.5 rounded-lg text-white font-bold ${attempts > 0 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400'}`}>
                     Sign In
                 </button>
                 <SocialAuth />
-                <p className="mt-4 text-center text-sm">Tidak punya akun? <Link href="/auth/register" className="text-blue-600 font-bold">Daftar</Link></p>
+                <p className="mt-4 text-center text-sm">Tidak punya akun? <Link href="/auth/register" className="text-blue-600 font-bold hover:underline">Daftar</Link></p>
             </form>
         </AuthFromWrapper>
     );
