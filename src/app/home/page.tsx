@@ -1,18 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
+import Game1 from "../../components/Game1";
 
-export default function HomePage() {
+export default function Home() {
     const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(false);
 
     useEffect(() => {
-        // Mengecek status login dari localStorage
+        // Sistem harus mengecek status login pengguna [cite: 105]
         const loggedIn = localStorage.getItem('isLoggedIn');
         
         if (!loggedIn) {
-            // Jika belum login, redirect ke halaman not-authorized
+            // Jika pengguna belum login, maka otomatis diarahkan ke halaman (/auth/not-authorized) [cite: 106]
             router.replace('/auth/not-authorized');
         } else {
             setIsAuthorized(true);
@@ -23,20 +24,10 @@ export default function HomePage() {
     if (!isAuthorized) return null;
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-blue-100">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">Selamat Datang di Halaman Game!</h1>
-            <p className="text-gray-600">Karena kamu tidak mengerjakan bonus, biarkan halaman ini kosong atau isi seadanya.</p>
-            
-            {/* Tombol Logout (Opsional tapi bagus untuk testing) */}
-            <button 
-                onClick={() => {
-                    localStorage.removeItem('isLoggedIn');
-                    router.push('/auth/login');
-                }}
-                className="mt-8 px-6 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-white font-semibold transition-colors"
-            >
-                Logout
-            </button>
+        <div className="flex flex-col items-center justify-center min-h-screen min-w-screen bg-blue-500">
+            <h1 className="text-4xl font-bold mb-4 text-white">Selamat Datang!</h1>
+            {/* Komponen game kamu tetap aman di sini */}
+            <Game1 />
         </div>
     );
 }
